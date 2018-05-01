@@ -88,14 +88,14 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
-    neo4j:
-        url: bolt://localhost
-        username: "neo4j"
-        password: "nil"
     cors:
         enabled: true
     gorm:
         autowire: true
+    neo4j:
+        url: bolt://localhost:7687
+        username: "neo4j"
+        password: "nil"
 endpoints:
     jmx:
         unique-names: true
