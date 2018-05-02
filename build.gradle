@@ -51,6 +51,11 @@ dependencies {
 
     compile 'com.github.jsimone:webapp-runner:8.5.11.3'
     compile "org.grails.plugins:neo4j"
+    compile "org.grails:gorm-neo4j-spring-boot:6.1.6.RELEASE"
+    compile "org.grails:grails-datastore-gorm-neo4j:6.1.6.RELEASE"
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.4'
+
 
     console "org.grails:grails-console"
     profile "org.grails.profiles:web"

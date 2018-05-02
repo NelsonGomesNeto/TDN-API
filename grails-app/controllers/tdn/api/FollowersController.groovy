@@ -1,8 +1,10 @@
 package tdn.api
 
+import com.tdnsecuredrest.Follows
 import com.tdnsecuredrest.User
 import grails.converters.JSON
 import org.grails.web.json.JSONArray
+import org.neo4j.driver.v1.StatementResult
 
 
 class FollowersController {
@@ -31,15 +33,20 @@ class FollowersController {
 
     def save(Long id) {
         User u = User.get(id)
-        u.addToFollowers(User.get(springSecurityService.principal.id))
-        u.save(flush: true, failOnError: true)
+        Follows follow = new Follows(from: User.get(springSecurityService.principal.id), to: u)
+        follow.withTransaction {follow.save()}
+//        u.addToFollowers(User.get(springSecurityService.principal.id))
+//        u.save(flush: true, failOnError: true)
         render u.followers as JSON
     }
 
     def delete(Long id) {
         User u = User.get(id)
-        u.removeFromFollowers(User.get(springSecurityService.principal.id))
-        u.save(flush: true, failOnError: true)
+        User au = User.get(springSecurityService.principal.id)
+        Follows.executeCypher("""MATCH (f:User {username:${au.username}})-[r]->(t:User {username:${u.username}}) delete r""")
+        au.withTransaction {au.save()}
+//        u.removeFromFollowers(User.get(springSecurityService.principal.id))
+//        u.save(flush: true, failOnError: true)
         render u.followers as JSON
     }
 

@@ -102,6 +102,7 @@ hibernate:
         queries: false
         use_second_level_cache: false
         use_query_cache: false
+
 #dataSource:
 #    pooled: true
 #    jmxExport: true
@@ -136,6 +137,6 @@ hibernate:
 
 grails:
     neo4j:
-        url: bolt://localhost
+        url: bolt://localhost:7687
         username: "neo4j"
-        password: "123456"
+        password: "nil"
