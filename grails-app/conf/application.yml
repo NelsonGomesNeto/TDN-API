@@ -1,6 +1,6 @@
 ---
 grails:
-    profile: web
+    profile: rest-api
     codegen:
         defaultPackage: tdn.api
     spring:
@@ -92,10 +92,6 @@ grails:
         enabled: true
     gorm:
         autowire: true
-    neo4j:
-        url: bolt://localhost:7687
-        username: "neo4j"
-        password: "nil"
 endpoints:
     jmx:
         unique-names: true
@@ -106,34 +102,40 @@ hibernate:
         queries: false
         use_second_level_cache: false
         use_query_cache: false
-dataSource:
-    pooled: true
-    jmxExport: true
-    driverClassName: org.h2.Driver
-    username: sa
-    password: ''
+#dataSource:
+#    pooled: true
+#    jmxExport: true
+#    driverClassName: org.h2.Driver
+#    username: sa
+#    password: ''
+#
+#environments:
+#    development:
+#        dataSource:
+#            #pooled: true
+#            #jmxExport: true
+#            #driverClassName: org.postgresql.Driver
+#            #dialect: org.hibernate.dialect.PostgreSQL9Dialect
+#            #url: "jdbc:postgresql://localhost:5432/tdn"
+#            #username: tdn_developer
+#            #password: tdndeveloper123
+#            #dbCreate: update
+#
+#    test:
+#        dataSource:
+#            dbCreate: create-drop
+#            url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+#    production:
+#        dataSource:
+#            dbCreate: update
+#            driverClassName: org.postgresql.Driver
+#            dialect: org.hibernate.dialect.PostgreSQL9Dialect
+#            url: ${JDBC_DATABASE_URL}
+#            username: ${JDBC_DATABASE_USERNAME}
+#            password: ${JDBC_DATABASE_PASSWORD}
 
-environments:
-    development:
-        dataSource:
-            pooled: true
-            jmxExport: true
-            driverClassName: org.postgresql.Driver
-            dialect: org.hibernate.dialect.PostgreSQL9Dialect
-            url: "jdbc:postgresql://localhost:5432/tdn"
-            username: tdn_developer
-            password: tdndeveloper123
-            dbCreate: update
-
-    test:
-        dataSource:
-            dbCreate: create-drop
-            url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-    production:
-        dataSource:
-            dbCreate: update
-            driverClassName: org.postgresql.Driver
-            dialect: org.hibernate.dialect.PostgreSQL9Dialect
-            url: ${JDBC_DATABASE_URL}
-            username: ${JDBC_DATABASE_USERNAME}
-            password: ${JDBC_DATABASE_PASSWORD}
+grails:
+    neo4j:
+        url: bolt://localhost
+        username: "neo4j"
+        password: "123456"
