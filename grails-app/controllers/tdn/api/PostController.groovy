@@ -2,8 +2,10 @@ package tdn.api
 
 import com.tdnsecuredrest.User
 import grails.converters.JSON
+import org.codehaus.groovy.classgen.asm.sc.StaticTypesBinaryExpressionMultiTypeDispatcher
 import org.grails.web.json.JSONArray
 import org.joda.time.DateTimeZone
+import org.neo4j.driver.v1.StatementResult
 
 import javax.annotation.security.RolesAllowed
 
@@ -37,11 +39,15 @@ class PostController {
     }
 
     def save(Post post) {
-        post.user = User.get(springSecurityService.principal.id)
+        User au = User.get(springSecurityService.principal.id)
+        post.user = au
         post.date = new Date()
         post.likes = []
-        post.save(flush:true, failOnError: true)
-        sendNotifications(post.user, post.user.followers.toList(), 'Posted new content', post.date, post)
+        //post.withTransaction { post.save() }
+        StatementResult statementResult = Post.executeCypher("match (u:User {username:${au.username}}) create (u)-[r:Posted]->(p:Post {description: ${post.description}, image: ${post.image}, date: ${post.date.getTime()}}) return p as data")
+        au.withTransaction { au.save() }
+        println(statementResult)
+        // AFTER ALL SETTLED DOWN, WE DO NOTIFICATIONS sendNotifications(post.user, post.user.followers.toList(), 'Posted new content', post.date, post)
         JSONArray arr = postListToJSONArray([post].toList())
         render(status: 201, arr[0] as JSON)
     }
