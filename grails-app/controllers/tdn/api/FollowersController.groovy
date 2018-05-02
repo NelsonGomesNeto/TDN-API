@@ -5,6 +5,7 @@ import com.tdnsecuredrest.User
 import grails.converters.JSON
 import org.grails.web.json.JSONArray
 import org.neo4j.driver.v1.StatementResult
+import org.neo4j.driver.v1.types.Node
 
 
 class FollowersController {
@@ -13,12 +14,20 @@ class FollowersController {
     static transients = ['springSecurityService']
 
     def index(Long offset, Long max) {
-        List users = User.executeQuery("select u.followers from User u where u.id = ?",
-                [springSecurityService.principal.id], [max: max, offset: offset])
-        List<User> following = User.executeQuery("from User as u where :user in elements(u.followers)",
-                [user: User.get(springSecurityService.principal.id)])
+        User au = User.get(springSecurityService.principal.id)
+
+        List<Node> nodes = User.executeQuery("match (f:User {username:${au.username}})<-[r]-(t:User) return t as data", [offset: offset, max: max])
+        List<User> followers = new ArrayList<>()
+        for (n in nodes) { followers.add(n as User) }
+
+        nodes = User.executeQuery("match (f: User {username: ${au.username}})-[r]->(t: User) return t as data")
+        List<User> following = new ArrayList<>()
+        for (n in nodes) {
+            following.add(n as User)
+        }
+
         JSONArray arr = new JSONArray()
-        users.forEach {
+        followers.forEach {
             u -> def json = JSON.parse((u as JSON).toString())
                 json.put("isFollowing", following.contains(u))
                 arr.put(json)
@@ -51,9 +60,15 @@ class FollowersController {
     }
 
     def following(Long id, Long offset, Long max) {
-        List<User> users = User.executeQuery("from User as u where :user in elements(u.followers)", [user: User.get(id)], [offset: offset, max: max])
+        User au = User.get(springSecurityService.principal.id)
+        List<Node> nodes = User.executeQuery("match (f: User {username: ${au.username}})-[r]->(t: User) return t as data", [offset: offset, max: max])
+        List<User> following = new ArrayList<>()
+        for (n in nodes) {
+            following.add(n as User)
+        }
+
         JSONArray arr = new JSONArray()
-        users.forEach {
+        following.forEach {
             u -> def json = JSON.parse((u as JSON).toString())
                 json.put("isFollowing", true)
                 arr.put(json)
