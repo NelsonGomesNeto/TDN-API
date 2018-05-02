@@ -36,7 +36,8 @@ class FollowersController {
     }
 
     def followerCount(Long id) {
-        def followerCount = [followerCount: User.get(id).followers.size()]
+        User au = User.get(springSecurityService.principal.id)
+        def followerCount = [followerCount: User.executeQuery("match (f: User {username: ${au.username}})<-[r]-(t: User) return t as data").size()]
         render followerCount as JSON
     }
 
@@ -77,7 +78,8 @@ class FollowersController {
     }
 
     def followingCount(Long id) {
-        def followingCount = [followingCount: User.executeQuery("from User as u where :user in elements(u.followers)", [user: User.get(id)]).size()]
+        User au = User.get(springSecurityService.principal.id)
+        def followingCount = [followingCount: User.executeQuery("match (f: User {username: ${au.username}})-[r]->(t: User) return t as data").size()]
         render followingCount as JSON
     }
 }
