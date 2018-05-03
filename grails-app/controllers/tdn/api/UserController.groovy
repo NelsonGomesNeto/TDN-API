@@ -1,5 +1,6 @@
 package tdn.api
 
+import com.tdnsecuredrest.Follows
 import com.tdnsecuredrest.User
 import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
@@ -16,10 +17,8 @@ class UserController {
     static transients = ['springSecurityService']
 
     JSONElement getUser(User u) {
-        List<User> following = User.executeQuery("from User as u where :user in elements(u.followers)",
-                [user: User.get(springSecurityService.principal.id)])
         def json = JSON.parse((u as JSON).toString())
-        json.put("isFollowing", following.contains(u))
+        json.put("isFollowing", Follows.countByFromAndTo(User.get(springSecurityService.principal.id), u) > 0)
         return(json)
     }
 
