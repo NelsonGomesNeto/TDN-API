@@ -1,5 +1,6 @@
 package tdn.api
 
+import com.tdnsecuredrest.Follows
 import com.tdnsecuredrest.User
 import grails.converters.JSON
 import org.codehaus.groovy.classgen.asm.sc.StaticTypesBinaryExpressionMultiTypeDispatcher
@@ -43,13 +44,12 @@ class PostController {
         render arr[0] as JSON
     }
 
-    def posts(Long offset, Long max) {
+    def posts(Long max, Long offset) {
         User au = User.get(springSecurityService.principal.id)
         List<Node> nodes = Post.executeQuery("match (p: Post)<-[r:POSTED]-(u:User) where ((u)<-[:FOLLOWS]-(:User {username:${au.username}})" +
-                                             "or u.username = ${au.username}) return p, u order by p.date desc", [max: max, offset: offset])
+                                             "or u.username = ${au.username}) return p, u order by p.date desc skip ${offset} limit ${max}")
         List<Node> userNodes = nodes["u"]
         List<Node> postNodes = nodes["p"]
-        println(postNodes)
         List<Post> postList = new ArrayList<>()
         List<User> userList = new ArrayList<>()
         for (n in postNodes) { postList.add(n as Post) }
@@ -63,9 +63,12 @@ class PostController {
         post.date = new Date()
         Posted posted = new Posted(from: au, to: post)
         posted.withTransaction { posted.save() }
+        List<Follows> followsList = Follows.findAllByTo(au)
+        if (!followsList.isEmpty()) {
+            sendNotifications(au, followsList["from"], 'Posted new content', post.date, post)
+        }
         //StatementResult statementResult = Post.executeCypher("match (u:User {username:${au.username}}) create (u)-[r:Posted]->(p:Post {description: ${post.description}, image: ${post.image}, date: ${post.date.getTime()}}) return p as data")
         //au.withTransaction { au.save() }
-        // AFTER ALL SETTLED DOWN, WE DO NOTIFICATIONS sendNotifications(post.user, post.user.followers.toList(), 'Posted new content', post.date, post)
         JSONArray arr = postListToJSONArray([post].toList(), [au].toList())
         render(status: 201, arr[0] as JSON)
     }
@@ -78,7 +81,7 @@ class PostController {
             Likes.withTransaction { Likes.findByFromAndTo(au, likeObj.to).delete() }
         } else {
             likeObj.withTransaction { likeObj.save() }
-            // sendNotifications(au, au.followers.toList(), 'Liked your post', new Date(), post)
+            sendNotifications(au, [Posted.findByTo(likeObj.to).from].toList(), 'Liked your post', new Date(), likeObj.to)
         }
 
         JSONArray arr = postListToJSONArray([likeObj.to].toList(), [Posted.findByTo(likeObj.to).from].toList())
@@ -101,11 +104,15 @@ class PostController {
         return(arr)
     }
 
-    void sendNotifications(User from, List<User> list, String notifMessage, Date date, Post p) {
+    void sendNotifications(User from, List<User> list, String notificationMessage, Date date, Post p) {
         list.each {
-            Notification n = new Notification(message: notifMessage, date: date,
-                    read: false, destUser: it, fromUser: from, uri: '/post/' + p.id)
-            n.save(flush: true, failOnError: true)
+            //Notification n = new Notification(message: notificationMessage, date: date,
+              //      read: false, to: it, from: from, uri: '/post/' + p.i)
+
+            Notification.executeQuery("match (to:User{username:${it.username}}), (from:User{username:${from.username}}) " +
+                    "create (to)<-[r:NOTIFICATION{message:${notificationMessage}, date: ${date.getTime()}, read: false," +
+                    " uri: '/post/" + p.id.toString() + "'}]-(from)")
+            from.withTransaction {from.save()}
         }
     }
 }

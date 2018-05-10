@@ -1,10 +1,13 @@
 package tdn.api
 
 import com.tdnsecuredrest.User
+import grails.neo4j.Relationship
+import grails.gorm.annotation.Entity
 
-class Notification {
+@Entity
+class Notification implements Relationship<User, User> {
 
-    static belongsTo = [destUser: User, fromUser: User]
+    //static belongsTo = [destUser: User, fromUser: User]
 
     String message
     String uri
@@ -12,6 +15,7 @@ class Notification {
     Date date
 
     static constraints = {
-
     }
+
+    static mapWith = "neo4j"
 }

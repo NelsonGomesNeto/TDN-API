@@ -1,6 +1,7 @@
 package tdn.api
 
 import com.google.gson.Gson
+import com.tdnsecuredrest.Follows
 import com.tdnsecuredrest.User
 import grails.converters.JSON
 import org.grails.web.json.JSONArray
@@ -18,14 +19,14 @@ class UsersController {
         User au = User.get(springSecurityService.principal.id)
         List<User> list =  User.list(offset: offset, max: max)
         JSONArray arr = new JSONArray()
-        List<Node> nodes = User.executeQuery("match (f: User {username: ${au.username}})-[r]->(t: User) return t as data")
-        List<User> following = new ArrayList<>()
-        for (n in nodes) {
-            following.add(n as User)
-        }
+//        List<Node> nodes = User.executeQuery("match (f: User {username: ${au.username}})-[r]->(t: User) return t as data")
+//        List<User> following = new ArrayList<>()
+//        for (n in nodes) {
+//            following.add(n as User)
+//        }
         list.forEach {
             u -> def json = JSON.parse((u as JSON).toString())
-                json.put("isFollowing", following.contains(u))
+                json.put("isFollowing", Follows.countByFromAndTo(au, u))
                 arr.put(json)
         }
         render arr as JSON
